@@ -17,38 +17,17 @@ function initFingerClient() {
   finger.initClient(`${SERVER_IP}:${SERVER_PORT}`, sslCreds);
 }
 
-// 442 group codes based on Suprema G-SDK conventions
-const GROUPS_442 = [
-  { name: "Right Four Fingers", groupCode: 1 }, // Usually 1 for right slap
-  { name: "Left Four Fingers", groupCode: 2 }, // Usually 2 for left slap
-  { name: "Two Thumbs", groupCode: 3 }, // Usually 3 for thumbs slap
-];
-
 FingerprintEmitter.on("fingerprintCaptured", (data) => {
   console.log("Fingerprint captured:", data);
   // Add code to send the fingerprint data to the server if needed
 });
 
-// Capture 442 slap fingerprints using group capture
-const capture442Groups = async (deviceID, format = 0, threshold = 50) => {
-  for (const group of GROUPS_442) {
-    try {
-      console.log(`Place ${group.name} on the scanner.`);
-      // The finger.scan method should accept groupCode for slap/group capture
-      const templateData = await finger.scan(
-        deviceID,
-        format,
-        threshold,
-        group.groupCode
-      );
-      FingerprintEmitter.emit("fingerprintCaptured", {
-        group: group.name,
-        data: templateData,
-      });
-      // Optionally, add a delay or prompt user to continue
-    } catch (error) {
-      console.error(`Error capturing ${group.name}:`, error);
-    }
+const captureFingerprint = async (deviceID, format = 0, threshold = 50) => {
+  try {
+    const templateData = await finger.scan(deviceID, format, threshold);
+    FingerprintEmitter.emit("fingerprintCaptured", templateData);
+  } catch (error) {
+    console.error("Error capturing fingerprint:", error);
   }
 };
 
@@ -56,8 +35,8 @@ const startFingerprintCapture = async (deviceID) => {
   try {
     initFingerClient();
     console.log("Fingerprint client initialized.");
-    await capture442Groups(deviceID);
-    console.log("4-4-2 fingerprint group capture completed.");
+    await captureFingerprint(deviceID);
+    console.log("Fingerprint capture started.");
   } catch (error) {
     console.error("Error starting fingerprint capture:", error);
   }
@@ -78,5 +57,5 @@ if (require.main === module) {
     );
 }
 
-// This code uses the real G-SDK Node.js client to capture fingerprints from a Suprema device in 4-4-2 slap format.
+// This code uses the real G-SDK Node.js client to capture fingerprints from a Suprema device.
 // Make sure to update SERVER_IP, SERVER_PORT, CA_FILE, and DEVICE_ID as needed.
